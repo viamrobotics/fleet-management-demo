@@ -1,0 +1,18 @@
+FROM ubuntu:22.04
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y \
+    curl \
+    ca-certificates \
+    libgl1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Download viam-server AppImage for the build architecture (aarch64 on Apple Silicon)
+RUN curl -fsSL \
+    "https://storage.googleapis.com/packages.viam.com/apps/viam-server/viam-server-stable-$(uname -m).AppImage" \
+    -o /usr/local/bin/viam-server.AppImage \
+    && chmod +x /usr/local/bin/viam-server.AppImage
+
+# --appimage-extract-and-run avoids FUSE requirements (needed in containers)
+ENTRYPOINT ["/usr/local/bin/viam-server.AppImage", "--appimage-extract-and-run", \
+            "-config", "/etc/viam/config.json"]

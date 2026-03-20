@@ -1,0 +1,8 @@
+# Machine credentials — never commit
+configs/all/
+
+# Generated at runtime
+logs/
+
+# macOS
+.DS_Store

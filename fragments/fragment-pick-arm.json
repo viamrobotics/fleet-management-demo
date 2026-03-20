@@ -1,0 +1,96 @@
+{
+  "description": "Pick-and-place arm config. Includes xArm6, gripper, wrist-mounted depth camera, force sensor, and YOLOv8 detector for pick target identification. Used by all aus-/chi-/sea-pick-arm-* machines.",
+  "modules": [
+    {
+      "type": "registry",
+      "name": "rand_fake-modules-go",
+      "module_id": "rand:fake-modules-go",
+      "version": "latest"
+    },
+    {
+      "type": "registry",
+      "name": "viam-labs_vision-yolov8",
+      "module_id": "viam-labs:yolov8",
+      "version": "latest"
+    }
+  ],
+  "components": [
+    {
+      "name": "board",
+      "model": "rand:fake-modules-go:fake-board",
+      "type": "board",
+      "namespace": "rdk",
+      "attributes": {
+        "analogue_readers": [],
+        "digital_interrupts": []
+      },
+      "depends_on": []
+    },
+    {
+      "name": "arm",
+      "model": "rand:fake-modules-go:fake-arm",
+      "type": "arm",
+      "namespace": "rdk",
+      "attributes": {
+        "host": "192.168.1.10",
+        "port": 18333,
+        "speed_degs_per_sec": 30,
+        "acceleration_degs_per_sec_per_sec": 15
+      },
+      "depends_on": []
+    },
+    {
+      "name": "gripper",
+      "model": "rand:fake-modules-go:fake-gripper",
+      "type": "gripper",
+      "namespace": "rdk",
+      "attributes": {
+        "board": "board",
+        "open_pin": "7",
+        "close_pin": "8",
+        "grip_force_n": 40,
+        "open_timeout_ms": 2000
+      },
+      "depends_on": ["board"]
+    },
+    {
+      "name": "wrist-cam",
+      "model": "rand:fake-modules-go:fake-camera",
+      "type": "camera",
+      "namespace": "rdk",
+      "attributes": {
+        "width_px": 848,
+        "height_px": 480,
+        "frame_rate": 60,
+        "depth_enabled": true
+      },
+      "depends_on": []
+    },
+    {
+      "name": "force-sensor",
+      "model": "rand:fake-modules-go:fake-sensor",
+      "type": "sensor",
+      "namespace": "rdk",
+      "attributes": {
+        "board": "board",
+        "i2c_bus": "1",
+        "max_force_n": 100,
+        "overload_threshold_n": 85
+      },
+      "depends_on": ["board"]
+    },
+    {
+      "name": "detector",
+      "model": "viam-labs:vision:yolov8",
+      "type": "vision",
+      "namespace": "rdk",
+      "attributes": {
+        "confidence_threshold": 0.7,
+        "iou_threshold": 0.45,
+        "camera_name": "wrist-cam",
+        "label_path": "/opt/models/warehouse-labels.txt"
+      },
+      "depends_on": ["wrist-cam"]
+    }
+  ]
+}
