@@ -1,92 +1,101 @@
 {
-  "description": "Fixed conveyor controller config. Includes belt motor, entry/exit ultrasonic sensors, and event manager for jam and throughput alerting. Used by all aus-/chi-/sea-conveyor-ctrl-* machines.",
-  "modules": [
-    {
-      "type": "registry",
-      "name": "rand_fake-modules-go",
-      "module_id": "rand:fake-modules-go",
-      "version": "latest"
-    },
-    {
-      "type": "registry",
-      "name": "viam_event-manager",
-      "module_id": "viam:event-manager",
-      "version": "latest"
-    }
-  ],
   "components": [
     {
       "name": "board",
-      "model": "rand:fake-modules-go:fake-board",
-      "type": "board",
       "namespace": "rdk",
+      "type": "board",
+      "model": "fieldwork:fake-modules-go:fake-board",
       "attributes": {
-        "analogue_readers": [],
+        "analogs": [],
         "digital_interrupts": []
-      },
-      "depends_on": []
+      }
     },
     {
       "name": "belt-motor",
-      "model": "rand:fake-modules-go:fake-motor",
-      "type": "motor",
       "namespace": "rdk",
+      "type": "motor",
+      "model": "fieldwork:fake-modules-go:fake-motor",
       "attributes": {
-        "board": "board",
-        "dir_flip": false,
-        "max_rpm": 200,
-        "ticks_per_rotation": 1600
+        "enable_position": true,
+        "max_speed_rpm": 200
       },
-      "depends_on": ["board"]
+      "depends_on": [
+        "board"
+      ]
     },
     {
       "name": "entry-sensor",
-      "model": "rand:fake-modules-go:fake-sensor",
-      "type": "sensor",
       "namespace": "rdk",
+      "type": "sensor",
+      "model": "fieldwork:fake-modules-go:fake-sensor",
       "attributes": {
+        "timeout_ms": 50,
         "board": "board",
         "trigger_pin": "11",
-        "echo_pin": "13",
-        "timeout_ms": 50
+        "echo_pin": "13"
       },
-      "depends_on": ["board"]
+      "depends_on": [
+        "board"
+      ]
     },
     {
       "name": "exit-sensor",
-      "model": "rand:fake-modules-go:fake-sensor",
-      "type": "sensor",
       "namespace": "rdk",
+      "type": "sensor",
+      "model": "fieldwork:fake-modules-go:fake-sensor",
       "attributes": {
+        "timeout_ms": 50,
         "board": "board",
         "trigger_pin": "15",
-        "echo_pin": "16",
-        "timeout_ms": 50
+        "echo_pin": "16"
       },
-      "depends_on": ["board"]
+      "depends_on": [
+        "board"
+      ]
     },
     {
       "name": "event-manager",
-      "model": "viam:event-manager:eventing",
-      "type": "sensor",
       "namespace": "rdk",
+      "type": "sensor",
+      "model": "viam:event-manager:eventing",
       "attributes": {
-        "sensors": ["entry-sensor", "exit-sensor"],
         "check_interval_ms": 500,
         "rules": [
           {
-            "name": "jam_detected",
             "condition": "entry-sensor.distance < 0.05 && exit-sensor.distance > 0.5",
-            "severity": "error"
+            "severity": "error",
+            "name": "jam_detected"
           },
           {
             "name": "throughput_low",
             "condition": "entry-sensor.count < 10",
             "severity": "warning"
           }
+        ],
+        "sensors": [
+          "entry-sensor",
+          "exit-sensor"
         ]
       },
-      "depends_on": ["entry-sensor", "exit-sensor"]
+      "depends_on": [
+        "entry-sensor",
+        "exit-sensor"
+      ]
     }
-  ]
+  ],
+  "modules": [
+    {
+      "type": "registry",
+      "name": "viam_event-manager",
+      "module_id": "viam:event-manager",
+      "version": "latest"
+    },
+    {
+      "type": "registry",
+      "name": "fieldwork_fake-modules-go",
+      "module_id": "fieldwork:fake-modules-go",
+      "version": "latest"
+    }
+  ],
+  "description": "Fixed conveyor controller config. Includes belt motor, entry/exit ultrasonic sensors, and event manager for jam and throughput alerting. Used by all aus-/chi-/sea-conveyor-ctrl-* machines."
 }

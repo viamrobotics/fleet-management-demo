@@ -1,91 +1,80 @@
 {
-  "description": "Mobile inspection bot config. Includes drive base, front camera, lidar, IMU, and YOLOv8 object detector. Used by all aus-/chi-/sea-inspection-bot-* machines.",
-  "modules": [
-    {
-      "type": "registry",
-      "name": "rand_fake-modules-go",
-      "module_id": "rand:fake-modules-go",
-      "version": "latest"
-    },
-    {
-      "type": "registry",
-      "name": "viam-labs_vision-yolov8",
-      "module_id": "viam-labs:yolov8",
-      "version": "latest"
-    }
-  ],
   "components": [
     {
       "name": "board",
-      "model": "rand:fake-modules-go:fake-board",
-      "type": "board",
       "namespace": "rdk",
+      "type": "board",
+      "model": "fieldwork:fake-modules-go:fake-board",
       "attributes": {
-        "analogue_readers": [],
-        "digital_interrupts": []
-      },
-      "depends_on": []
+        "digital_interrupts": [],
+        "analogs": []
+      }
     },
     {
       "name": "front-cam",
-      "model": "rand:fake-modules-go:fake-camera",
-      "type": "camera",
       "namespace": "rdk",
+      "type": "camera",
+      "model": "fieldwork:fake-modules-go:fake-camera",
       "attributes": {
+        "frame_rate": 30,
         "width_px": 1280,
-        "height_px": 720,
-        "frame_rate": 30
-      },
-      "depends_on": []
+        "height_px": 720
+      }
     },
     {
       "name": "lidar",
-      "model": "rand:fake-modules-go:fake-camera",
-      "type": "camera",
       "namespace": "rdk",
+      "type": "camera",
+      "model": "fieldwork:fake-modules-go:fake-camera",
       "attributes": {
-        "serial_path": "/dev/ttyUSB0",
         "baud_rate": 115200,
-        "timeout_ms": 1000
-      },
-      "depends_on": []
+        "timeout_ms": 1000,
+        "serial_path": "/dev/ttyUSB0"
+      }
     },
     {
       "name": "imu",
-      "model": "rand:fake-modules-go:fake-movement-sensor",
-      "type": "movement_sensor",
       "namespace": "rdk",
-      "attributes": {
-        "board": "board",
-        "i2c_bus": "1",
-        "use_alternate_i2c_address": false
-      },
-      "depends_on": ["board"]
+      "type": "movement_sensor",
+      "model": "fieldwork:fake-modules-go:fake-movementsensor",
+      "attributes": {},
+      "depends_on": [
+        "board"
+      ]
     },
     {
       "name": "drive-base",
-      "model": "rand:fake-modules-go:fake-base",
-      "type": "base",
       "namespace": "rdk",
+      "type": "base",
+      "model": "fieldwork:fake-modules-go:fake-base",
       "attributes": {
-        "width_mm": 580,
         "wheel_circumference_mm": 381,
-        "spin_slip_factor": 1.0
-      },
-      "depends_on": []
-    },
+        "width_mm": 580
+      }
+    }
+  ],
+  "services": [
     {
       "name": "detector",
-      "model": "viam-labs:vision:yolov8",
-      "type": "vision",
-      "namespace": "rdk",
+      "api": "rdk:service:vision",
+      "model": "rdk:builtin:fake",
       "attributes": {
-        "confidence_threshold": 0.6,
-        "iou_threshold": 0.45,
-        "camera_name": "front-cam",
-        "label_path": "/opt/models/warehouse-labels.txt"
+        "model_location": "yolov8n.pt",
+        "task": "detect"
       },
-      "depends_on": ["front-cam"]
+      "depends_on": [
+        "front-cam",
+        "lidar"
+      ]
     }
-  ]
+  ],
+  "modules": [
+    {
+      "type": "registry",
+      "name": "fieldwork_fake-modules-go",
+      "module_id": "fieldwork:fake-modules-go",
+      "version": "latest"
+    }
+  ],
+  "description": "Mobile inspection bot config. Includes drive base, front camera, lidar, IMU, and YOLOv8 object detector. Used by all aus-/chi-/sea-inspection-bot-* machines."
 }
