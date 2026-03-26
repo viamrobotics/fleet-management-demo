@@ -76,5 +76,5 @@
       "version": "latest"
     }
   ],
-  "description": "Mobile inspection bot config. Includes drive base, front camera, lidar, IMU, and YOLOv8 object detector. Used by all aus-/chi-/sea-inspection-bot-* machines."
+  "description": "Mobile inspection bot config. Includes drive base, front camera, lidar, IMU, and fake vision detector. Used by all aus-/chi-/sea-inspection-bot-* machines."
 }

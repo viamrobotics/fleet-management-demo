@@ -6,9 +6,9 @@ set -e
 # Creates 20 machines across 3 locations.
 #
 # Online/offline split (12 online, 8 offline):
-#   Austin Warehouse  (7): 5 online, 2 offline
-#   Chicago Facility  (7): 4 online, 3 offline
-#   Seattle Hub       (6): 3 online, 3 offline
+#   Austin  (7): 5 online, 2 offline
+#   Chicago  (7): 4 online, 3 offline
+#   Seattle       (6): 3 online, 3 offline
 #
 # After running this script:
 #   1. Apply the correct fragment to each machine in app.viam.com
@@ -25,9 +25,9 @@ set -e
 #   3. Fill in the location IDs below
 # ---------------------------------------------------------------
 
-LOCATION_AUSTIN="5wg0uxpczt"      # e.g. "abc123"
-LOCATION_CHICAGO="bao861thux"     # e.g. "def456"
-LOCATION_SEATTLE="ipbklc6oy5"     # e.g. "ghi789"
+LOCATION_AUSTIN=""      # run `viam locations list` to find
+LOCATION_CHICAGO=""     #
+LOCATION_SEATTLE=""     #
 
 # ---------------------------------------------------------------
 
@@ -39,7 +39,7 @@ fi
 
 # Format: "location_key|machine_name|status"
 MACHINES=(
-  # Austin Warehouse — 5 online, 2 offline
+  # Austin — 5 online, 2 offline
   "austin|aus-inspection-bot-01|online"
   "austin|aus-inspection-bot-02|online"
   "austin|aus-inspection-bot-03|online"
@@ -48,7 +48,7 @@ MACHINES=(
   "austin|aus-pick-arm-01|offline"
   "austin|aus-pick-arm-02|offline"
 
-  # Chicago Facility — 4 online, 3 offline
+  # Chicago — 4 online, 3 offline
   "chicago|chi-inspection-bot-01|online"
   "chicago|chi-inspection-bot-03|online"
   "chicago|chi-conveyor-ctrl-01|online"
@@ -57,7 +57,7 @@ MACHINES=(
   "chicago|chi-conveyor-ctrl-02|offline"
   "chicago|chi-pick-arm-02|offline"
 
-  # Seattle Hub — 3 online, 3 offline
+  # Seattle — 3 online, 3 offline
   "seattle|sea-inspection-bot-01|online"
   "seattle|sea-conveyor-ctrl-01|online"
   "seattle|sea-pick-arm-01|online"

@@ -26,9 +26,9 @@ API_KEY    = ""   # from app.viam.com → Org Settings → API Keys
 API_KEY_ID = ""   # the key's ID (shown alongside the key)
 
 LOCATION_IDS = [
-    "5wg0uxpczt",   # Austin
-    "bao861thux",   # Chicago
-    "ipbklc6oy5",   # Seattle
+    "",   # Austin   — run `viam locations list` to find
+    "",   # Chicago
+    "",   # Seattle
 ]
 
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "configs", "all")

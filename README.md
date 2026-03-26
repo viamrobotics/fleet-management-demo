@@ -22,23 +22,23 @@ A fictional industrial robotics company — **Fieldworks Robotics** — runs pic
 
 | Location | Machines | Online | Offline |
 |---|---|---|---|
-| Austin Warehouse | 7 | 5 | 2 |
-| Chicago Facility | 7 | 4 | 3 |
-| Seattle Hub | 6 | 3 | 3 |
+| Austin | 7 | 5 | 2 |
+| Chicago | 7 | 4 | 3 |
+| Seattle | 6 | 3 | 3 |
 
 ### Machine Types
 
-Each location runs three types of machines, all using simulated hardware (`rand:fake-modules-go`) — no physical robots required.
+Each location runs three types of machines, all using simulated hardware (`fieldwork:fake-modules-go`) — no physical robots required.
 
 | Type | Naming | Fragment | Components |
 |---|---|---|---|
-| Inspection bot | `*-inspection-bot-*` | `fieldwork-inspection-bot` | board, front-cam, lidar, IMU, drive-base, YOLOv8 detector |
+| Inspection bot | `*-inspection-bot-*` | `fieldwork-inspection-bot` | board, front-cam, lidar, IMU, drive-base, vision detector |
 | Conveyor controller | `*-conveyor-ctrl-*` | `fieldwork-conveyor-ctrl` | board, belt-motor, entry-sensor, exit-sensor, event-manager |
-| Pick-and-place arm | `*-pick-arm-*` | `fieldwork-pick-arm` | board, arm, gripper, wrist-cam, force-sensor, YOLOv8 detector |
+| Pick-and-place arm | `*-pick-arm-*` | `fieldwork-pick-arm` | board, arm, gripper, wrist-cam, force-sensor, vision detector |
 
 ### Full Machine List
 
-**Austin Warehouse** (5 online, 2 offline)
+**Austin** (5 online, 2 offline)
 - `aus-inspection-bot-01` — online
 - `aus-inspection-bot-02` — online
 - `aus-inspection-bot-03` — online
@@ -47,7 +47,7 @@ Each location runs three types of machines, all using simulated hardware (`rand:
 - `aus-pick-arm-01` — offline
 - `aus-pick-arm-02` — offline
 
-**Chicago Facility** (4 online, 3 offline)
+**Chicago** (4 online, 3 offline)
 - `chi-inspection-bot-01` — online
 - `chi-conveyor-ctrl-01` — online
 - `chi-pick-arm-01` — online
@@ -56,7 +56,7 @@ Each location runs three types of machines, all using simulated hardware (`rand:
 - `chi-conveyor-ctrl-02` — offline
 - `chi-pick-arm-02` — offline
 
-**Seattle Hub** (3 online, 3 offline)
+**Seattle** (3 online, 3 offline)
 - `sea-inspection-bot-01` — online
 - `sea-conveyor-ctrl-01` — online
 - `sea-pick-arm-01` — online
@@ -72,68 +72,38 @@ Each location runs three types of machines, all using simulated hardware (`rand:
 
 ## Prerequisites
 
-- [Viam CLI](https://docs.viam.com/cli/) installed and logged in (`viam login`)
 - Python 3.9+ with `viam-sdk` (`pip install viam-sdk`)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) running
-- Access to the **Fieldworks Robotics** org on app.viam.com
-- A Viam API key for the org — create one at **app.viam.com → Org Settings → API Keys**
+- A Viam API key — create one at **app.viam.com → Org Settings → API Keys**
 
 ---
 
-## Setup (One-Time)
+## Setup
 
-This only needs to be done once. If the org is already configured in app.viam.com, skip to **Pre-Demo Checklist**.
-
-### Step 0 — Fill in your API credentials
-
-Open `apply-fragments.py` and `generate-configs.py` and fill in the same values at the top of each:
-
-```python
-API_KEY    = ""   # from app.viam.com → Org Settings → API Keys
-API_KEY_ID = ""   # the key's ID (shown alongside the key)
-```
-
-### Step 1 — Create the machines
+One command sets up everything — locations, fragments, machines, configs, and Docker fleet — whether the org is brand new or already partially configured:
 
 ```bash
-./create-fleet-demo.sh
+python3 setup-demo.py
 ```
 
-Creates all 20 machines across the 3 locations using the Viam CLI.
+You'll be prompted for three values (or set them as environment variables):
 
-### Step 2 — Create the fragments in app.viam.com
-
-Navigate to **app.viam.com → Fieldworks Robotics → Fleet → Fragments** and create three fragments using the JSON files in `fragments/`:
-
-| Fragment name | File |
+| Variable | Where to find it |
 |---|---|
-| `fieldwork-inspection-bot` | `fragments/fragment-inspection-bot.json` |
-| `fieldwork-conveyor-ctrl` | `fragments/fragment-conveyor-ctrl.json` |
-| `fieldwork-pick-arm` | `fragments/fragment-pick-arm.json` |
+| `VIAM_API_KEY` | app.viam.com → Org Settings → API Keys |
+| `VIAM_API_KEY_ID` | shown alongside the key |
+| `VIAM_ORG_ID` | app.viam.com → Org Settings |
 
-After saving each fragment, copy its ID from the fragment detail page. Open `apply-fragments.py` and paste the IDs into the `FRAGMENT_IDS` dict at the top of the file.
+The script runs six steps and is fully idempotent — safe to re-run if anything fails:
 
-### Step 3 — Apply fragments to all machines
+1. Creates the Austin, Chicago, and Seattle locations (skips any that already exist)
+2. Creates the three fragments from local JSON files, or updates them if they exist
+3. Creates all 20 machines (skips any that already exist)
+4. Applies the correct fragment to each machine
+5. Generates `configs/all/<machine>.json` for all 20 machines
+6. Builds the Docker image and starts the fleet (12 online, 8 offline)
 
-```bash
-python3 apply-fragments.py
-```
-
-Assigns the correct fragment to each machine based on its name. Takes about 30 seconds.
-
-### Step 4 — Add the broken color detector to `chi-inspection-bot-03`
-
-1. Open **chi-inspection-bot-03** in app.viam.com → **Config** tab
-2. Add a new **vision service** directly on this machine (not via the fragment):
-   - Name: `color-detector`
-   - Model: `rdk:vision:color_detector`
-   - Attributes:
-     ```json
-     { "detect_colors": ["#FF0000"] }
-     ```
-     > The attribute name `detect_colors` is intentionally wrong — the correct name is `detect_color`. This typo causes the service to fail on startup.
-3. Save
-
+Setup takes about 3–5 minutes on first run (Docker build downloads viam-server). Re-runs are faster.
 
 ---
 
@@ -141,13 +111,17 @@ Assigns the correct fragment to each machine based on its name. Takes about 30 s
 
 Run through this before every demo to confirm everything is in the right state.
 
-- [ ] `configs/all/` exists — if not, run `python3 generate-configs.py` first (one-time per machine)
-- [ ] `./start-online-machines.sh` has been run — all 20 containers started
 - [ ] app.viam.com shows **12 online** machines and **8 offline** across the fleet
 - [ ] `chi-inspection-bot-03` shows as **online with an error indicator** (not offline)
 - [ ] `chi-inspection-bot-03` → Components tab — `color-detector` shows red/unhealthy
 - [ ] Austin inspection bots (`aus-inspection-bot-01/02/03`) are **not** pinned to a fragment version — they should be on `latest` before the canary section
 - [ ] Note the current version number of `fieldwork-inspection-bot` (shown on the fragment detail page) — you'll pin Austin to this version during Section 4
+
+If machines aren't running, start the fleet:
+
+```bash
+./start-online-machines.sh
+```
 
 ---
 
@@ -159,7 +133,7 @@ Run through this before every demo to confirm everything is in the right state.
 ./start-online-machines.sh
 ```
 
-1. Builds the Docker image (first run takes ~2 min to download viam-server)
+1. Builds the Docker image (first run takes ~3 min to download viam-server)
 2. Starts all 20 machines as Docker containers
 3. Waits 60 seconds for them to register with app.viam.com
 4. Stops the 8 machines that should appear offline
@@ -179,8 +153,6 @@ Starts just that one container. No wait, no offline teardown.
 ./stop-online-machines.sh chi-pick-arm-01   # stop one machine
 ```
 
-Stops and removes the specified container(s).
-
 ---
 
 ## Demo Script
@@ -191,7 +163,7 @@ Stops and removes the specified container(s).
 
 1. Open app.viam.com → Fieldworks Robotics
 2. Show the **Locations** view — Austin, Chicago, Seattle each with machine counts and online/offline status
-3. Click into **Austin Warehouse** — 5 green machines, 2 grey (offline pick arms)
+3. Click into **Austin** — 5 green machines, 2 grey (offline pick arms)
 4. Switch to the **Fleet** tab — all 20 machines in one list; show the location filter
 
 **What to point out:** Three cities, zero on-prem infrastructure. No VPN, no static IPs, no on-site server. Any machine that has an internet connection is visible and manageable here.
@@ -232,7 +204,7 @@ Stops and removes the specified container(s).
 > ⚠️ Do steps 1–3 before starting this section in front of a customer — pinning machines one-by-one is setup, not demo.
 
 **Pre-section setup** (takes ~2 min, do while talking through the concept):
-1. Navigate to **Austin Warehouse** → open `aus-inspection-bot-01` → **Config** tab
+1. Navigate to **Austin** → open `aus-inspection-bot-01` → **Config** tab
 2. Find the `fieldwork-inspection-bot` fragment entry and pin it to the current version number (visible on the fragment detail page, e.g. `3`)
 3. Repeat for `aus-inspection-bot-02` and `aus-inspection-bot-03`
 
@@ -250,10 +222,10 @@ Stops and removes the specified container(s).
 
 > "New config ships to the canary machines first. Austin doesn't move until we're confident."
 
-1. In **Fleet → Fragments → fieldwork-inspection-bot**, make a visible change — increase the `confidence_threshold` on the YOLOv8 detector from `0.6` to `0.75`
+1. In **Fleet → Fragments → fieldwork-inspection-bot**, make a visible change to the fragment — for example, update an attribute on the `detector` service
 2. Save — this creates a new fragment version
-3. Navigate to **Chicago Facility** → `chi-inspection-bot-01` — it's on `latest`, so it's already running the new fragment version (check the fragment version shown on its Config tab)
-4. Navigate to **Austin Warehouse** → `aus-inspection-bot-01` — still on version `3`, unchanged
+3. Navigate to **Chicago** → `chi-inspection-bot-01` — it's on `latest`, so it's already running the new fragment version (check the fragment version shown on its Config tab)
+4. Navigate to **Austin** → `aus-inspection-bot-01` — still on the pinned version, unchanged
 5. Point to the fragment version indicator on each machine to make the split visible
 
 **What to point out:** The update reached Chicago and Seattle the moment you saved — no deployment pipeline, no SSH, no maintenance window. Austin is completely unaffected. When you're confident the new config is solid, remove the version pin on the Austin machines and the rollout completes. This scales identically to 2,000 machines.
@@ -263,22 +235,25 @@ Stops and removes the specified container(s).
 ## File Reference
 
 ```
-marketing/
+fleet-management-demo/
 ├── README.md                        ← this file
 ├── .gitignore
-├── create-fleet-demo.sh             ← Step 1: create 20 machines via CLI
-├── apply-fragments.py               ← Step 3: apply fragments to all machines
-├── generate-configs.py              ← fetch credentials and write config JSONs (run once per machine)
+├── setup-demo.py                    ← one-command setup (run this)
 ├── start-online-machines.sh         ← start 12 online / stop 8 offline via Docker
 ├── stop-online-machines.sh          ← stop and remove viam-* containers
 ├── Dockerfile.viam-server           ← Ubuntu 22.04 image with viam-server AppImage
 ├── fragments/
 │   ├── fragment-inspection-bot.json ← shared config for all inspection bots
 │   ├── fragment-conveyor-ctrl.json  ← shared config for all conveyor controllers
-│   ├── fragment-pick-arm.json       ← shared config for all pick-and-place arms
-│   └── override-chi-inspection-bot-03.md  ← documents the error machine setup
-└── configs/all/                     ← gitignored — machine credentials, generated locally
+│   └── fragment-pick-arm.json       ← shared config for all pick-and-place arms
+└── configs/all/                     ← gitignored — machine credentials, generated by setup-demo.py
 ```
+
+The following scripts are kept for reference if you need to run individual steps manually. `setup-demo.py` reimplements all of this end-to-end:
+
+- `create-fleet-demo.sh` — creates machines via CLI (fill in location IDs at the top)
+- `apply-fragments.py` — applies fragments to machines (fill in location and fragment IDs at the top)
+- `generate-configs.py` — fetches machine credentials and writes config JSONs (fill in location IDs at the top)
 
 ---
 
@@ -286,7 +261,7 @@ marketing/
 
 Each machine runs as a Docker container with its own isolated filesystem and its own `/root/.viam` package cache — no shared state between instances. The containers download the real viam-server AppImage at build time and connect to app.viam.com using genuine machine credentials, so they appear as live machines in the dashboard.
 
-All hardware is simulated via `rand:fake-modules-go`, which implements the full Viam component API for cameras, arms, motors, sensors, and more. The YOLOv8 detector runs but returns no detections (fake cameras return empty frames) — it's present to show the capability and integration, not to produce results.
+All hardware is simulated via `fieldwork:fake-modules-go`, which implements the full Viam component API for cameras, arms, motors, sensors, and more. A fake vision service (`rdk:builtin:fake`) stands in for the object detector — it's present to show the capability and integration in the component graph.
 
 ---
 
@@ -298,20 +273,15 @@ The container hasn't connected yet. Wait 30–60 seconds and refresh. If it pers
 docker logs viam-<machine-name>
 ```
 
+**Multiple orgs causing container conflicts**
+If you've run the demo against more than one org, Docker container names will collide. Nuke all viam containers and re-run setup:
+```bash
+docker ps -a --filter "name=viam-" -q | xargs docker rm -f
+python3 setup-demo.py
+```
+
 **Docker build fails**
 Make sure Docker Desktop is running. The build downloads a ~30 MB AppImage and needs a network connection.
-
-**A module fails to start**
-```bash
-docker logs viam-<machine-name>
-```
-Common fix: stop everything and rebuild the image, which picks up any missing system libraries.
-```bash
-./stop-online-machines.sh && ./start-online-machines.sh
-```
-
-**`generate-configs.py` returns no machines**
-The location IDs at the top of the script need to match app.viam.com. Run `viam locations list` to verify.
 
 **Watch a machine's logs live**
 ```bash

@@ -24,16 +24,16 @@ API_KEY    = ""   # from app.viam.com → Org Settings → API Keys
 API_KEY_ID = ""   # the key's ID (shown alongside the key)
 
 LOCATION_IDS = [
-    "5wg0uxpczt",   # Austin
-    "bao861thux",   # Chicago
-    "ipbklc6oy5",   # Seattle
+    "",   # Austin   — run `viam locations list` to find
+    "",   # Chicago
+    "",   # Seattle
 ]
 
-# Fragment IDs — copy from app.viam.com after creating each fragment
+# Fragment IDs — copy from app.viam.com → Fleet → Fragments after creating each fragment
 FRAGMENT_IDS = {
-    "inspection-bot": "08b2b8d2-e338-4c62-8da2-c6dda1eebeff",   # fieldwork-inspection-bot
-    "conveyor-ctrl":  "2aa79511-c7ca-4c42-b8b4-46b8789f2043",   # fieldwork-conveyor-ctrl
-    "pick-arm":       "81e8af2a-7d85-4689-adb8-1ce31aa14c87",   # fieldwork-pick-arm
+    "inspection-bot": "",   # fieldwork-inspection-bot
+    "conveyor-ctrl":  "",   # fieldwork-conveyor-ctrl
+    "pick-arm":       "",   # fieldwork-pick-arm
 }
 
 # ---------------------------------------------------------------
@@ -93,7 +93,7 @@ async def main():
                 robot_config=updated_config,
             )
 
-            print(f"  [applied] {machine.name} → fragment-{fragment_key}")
+            print(f"  [applied] {machine.name} → fieldwork-{fragment_key}")
             applied += 1
 
     client.close()
